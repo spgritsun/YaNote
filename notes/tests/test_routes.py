@@ -14,13 +14,14 @@ class TestRoutes(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.author = User.objects.create(username='Автор')
-        cls.any_auth_user = User.objects.create(
-            username='Любой авторизованный пользователь'
+        cls.any_reg_user = User.objects.create(
+            username='Любой зарегистрированный пользователь'
         )
         cls.note = Note.objects.create(title='Заголовок',
                                        text='Текст',
                                        slug='note-slug',
                                        author=cls.author)
+        cls.slug_for_args = (cls.note.slug,)
 
     def test_pages_availability_for_anonymous_user(self):
         url_status = {
@@ -37,12 +38,28 @@ class TestRoutes(TestCase):
                 self.assertEqual(response.status_code, expected_status)
 
     def test_pages_availability_for_auth_user(self):
-        self.client.force_login(self.any_auth_user)
-        urls = ('notes:list',
-                'notes:add',
-                'notes:success')
-        for name in urls:
+        self.client.force_login(self.any_reg_user)
+        names = ('notes:list',
+                 'notes:add',
+                 'notes:success')
+        for name in names:
             with self.subTest(name):
                 url = reverse(name)
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    def test_pages_availability_for_different_users(self):
+        user_status = {self.author: HTTPStatus.OK,
+                       self.any_reg_user: HTTPStatus.NOT_FOUND}
+        names = {
+            'notes:detail',
+            'notes:edit',
+            'notes:delete',
+        }
+        for user, status in user_status.items():
+            self.client.force_login(user)
+            for name in names:
+                with self.subTest(name):
+                    url = reverse(name, args=self.slug_for_args)
+                    response = self.client.get(url)
+                    self.assertEqual(response.status_code, status)
