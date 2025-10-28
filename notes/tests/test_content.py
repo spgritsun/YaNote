@@ -1,24 +1,11 @@
-from django.contrib.auth import get_user_model
-from django.test import TestCase
 from django.urls import reverse
 
-from notes.models import Note
+from notes.forms import NoteForm
 
-User = get_user_model()
+from .test_setup import TestSetUp
 
 
-class TestHomePage(TestCase):
-
-    @classmethod
-    def setUpTestData(cls):
-        cls.author = User.objects.create(username='Автор')
-        cls.any_reg_user = User.objects.create(
-            username='Любой зарегистрированный пользователь'
-        )
-        cls.note = Note.objects.create(title='Заголовок',
-                                       text='Текст',
-                                       slug='note-slug',
-                                       author=cls.author)
+class TestContent(TestSetUp):
 
     def test_notes_list_for_different_users(self):
         users_status = {
@@ -31,3 +18,12 @@ class TestHomePage(TestCase):
             object_list = response.context['object_list']
             self.assertEqual(self.note in object_list, status)
 
+    def test_pages_contains_form(self):
+        names_args = {'notes:add': None,
+                      'notes:edit': self.slug_for_args}
+        self.client.force_login(self.author)
+        for name, args in names_args.items():
+            url = reverse(name, args=args)
+            response = self.client.get(url)
+            assert 'form' in response.context
+            assert isinstance(response.context['form'], NoteForm)
