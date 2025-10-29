@@ -25,5 +25,5 @@ class TestContent(TestSetUp):
         for name, args in names_args.items():
             url = reverse(name, args=args)
             response = self.client.get(url)
-            assert 'form' in response.context
-            assert isinstance(response.context['form'], NoteForm)
+            self.assertIn('form', response.context)
+            self.assertIsInstance(response.context['form'], NoteForm)
