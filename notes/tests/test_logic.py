@@ -8,7 +8,7 @@ from notes.forms import WARNING
 from .test_setup import TestSetUp
 
 
-class TestRoutes(TestSetUp):
+class TestLogic(TestSetUp):
 
     @classmethod
     def setUpTestData(cls):
