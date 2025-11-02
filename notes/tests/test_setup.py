@@ -19,3 +19,9 @@ class TestSetUp(TestCase):
                                        slug='note-slug',
                                        author=cls.author)
         cls.slug_for_args = (cls.note.slug,)
+
+    def _login_as(self, user):
+        if user:
+            self.client.force_login(user)
+        else:
+            self.client.logout()
