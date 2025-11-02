@@ -1,8 +1,8 @@
-from django.urls import reverse
-
 from notes.forms import NoteForm
 
 from .test_setup import TestSetUp
+
+from .common import LIST_URL, ADD_URL, EDIT_URL
 
 
 class TestContent(TestSetUp):
@@ -13,17 +13,14 @@ class TestContent(TestSetUp):
             self.any_reg_user: False}
         for user, status in users_status.items():
             self.client.force_login(user)
-            url = reverse('notes:list')
-            response = self.client.get(url)
+            response = self.client.get(LIST_URL)
             object_list = response.context['object_list']
             self.assertEqual(self.note in object_list, status)
 
     def test_pages_contains_form(self):
-        names_args = {'notes:add': None,
-                      'notes:edit': self.slug_for_args}
+        urls = (ADD_URL, EDIT_URL)
         self.client.force_login(self.author)
-        for name, args in names_args.items():
-            url = reverse(name, args=args)
+        for url in urls:
             response = self.client.get(url)
             self.assertIn('form', response.context)
             self.assertIsInstance(response.context['form'], NoteForm)
