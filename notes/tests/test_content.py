@@ -22,7 +22,6 @@ class TestContent(TestSetUp):
         urls = (ADD_URL, EDIT_URL)
         self._login_as(self.author)
         for url in urls:
-            with self.subTest(user=self.author, url=url):
+            with self.subTest(url=url):
                 response = self.client.get(url)
-                self.assertIn('form', response.context)
-                self.assertIsInstance(response.context['form'], NoteForm)
+                self.assertIsInstance(response.context.get('form'), NoteForm)
