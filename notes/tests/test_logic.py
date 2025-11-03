@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from http import HTTPStatus
 from pytils.translit import slugify
 
@@ -12,19 +13,28 @@ class TestLogic(TestSetUp):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.form_data = {
+        cls.WARNING = WARNING
+
+    def setUp(self):
+        super().setUp()
+        self.form_data = {
             'title': 'Новый заголовок',
             'text': 'Новый текст',
             'slug': 'new-slug'
         }
-        cls.WARNING = WARNING
+
+    @contextmanager
+    def before_after_notes_count(self, delta):
+        count_before = Note.objects.count()
+        yield
+        count_after = Note.objects.count()
+        self.assertEqual(count_after, count_before + delta)
 
     def test_user_can_create_note(self):
         self._login_as(self.author)
-        notes_count = Note.objects.count()
-        response = self.client.post(ADD_URL, data=self.form_data)
+        with self.before_after_notes_count(delta=1):
+            response = self.client.post(ADD_URL, data=self.form_data)
         self.assertRedirects(response, SUCCESS_URL)
-        self.assertEqual(Note.objects.count(), notes_count + 1)
         new_note = Note.objects.get(slug=self.form_data['slug'])
         self.assertEqual(new_note.title, self.form_data['title'])
         self.assertEqual(new_note.text, self.form_data['text'])
@@ -33,28 +43,25 @@ class TestLogic(TestSetUp):
 
     def test_anonymous_user_cant_create_note(self):
         self._login_as(None)
-        notes_count = Note.objects.count()
-        response = self.client.post(ADD_URL, data=self.form_data)
+        with self.before_after_notes_count(delta=0):
+            response = self.client.post(ADD_URL, data=self.form_data)
         expected_url = f'{LOGIN_URL}?next={ADD_URL}'
         self.assertRedirects(response, expected_url)
-        self.assertEqual(Note.objects.count(), notes_count)
 
     def test_not_unique_slug(self):
         self._login_as(self.author)
-        notes_count = Note.objects.count()
         self.form_data['slug'] = self.note.slug
-        response = self.client.post(ADD_URL, data=self.form_data)
+        with self.before_after_notes_count(delta=0):
+            response = self.client.post(ADD_URL, data=self.form_data)
         self.assertFormError(response.context['form'], 'slug',
                              self.note.slug + self.WARNING)
-        self.assertEqual(Note.objects.count(), notes_count)
 
     def test_empty_slug(self):
         self._login_as(self.author)
-        notes_count = Note.objects.count()
         self.form_data.pop('slug')
-        response = self.client.post(ADD_URL, data=self.form_data)
+        with self.before_after_notes_count(delta=1):
+            response = self.client.post(ADD_URL, data=self.form_data)
         self.assertRedirects(response, SUCCESS_URL)
-        self.assertEqual(Note.objects.count(), notes_count + 1)
         new_note = Note.objects.last()
         expected_slug = slugify(self.form_data['title'])
         self.assertEqual(new_note.slug, expected_slug)
@@ -79,14 +86,12 @@ class TestLogic(TestSetUp):
 
     def test_author_can_delete_note(self):
         self._login_as(self.author)
-        notes_count = Note.objects.count()
-        response = self.client.post(DELETE_URL)
+        with self.before_after_notes_count(delta=-1):
+            response = self.client.post(DELETE_URL)
         self.assertRedirects(response, SUCCESS_URL)
-        self.assertEqual(Note.objects.count(), notes_count - 1)
 
     def test_other_user_cant_delete_note(self):
         self._login_as(self.any_reg_user)
-        notes_count = Note.objects.count()
-        response = self.client.post(DELETE_URL)
+        with self.before_after_notes_count(delta=0):
+            response = self.client.post(DELETE_URL)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.assertEqual(Note.objects.count(), notes_count)
