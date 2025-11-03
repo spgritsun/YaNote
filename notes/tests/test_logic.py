@@ -5,7 +5,7 @@ from pytils.translit import slugify
 from notes.models import Note
 from notes.forms import WARNING
 from .test_setup import TestSetUp
-from .common import ADD_URL, EDIT_URL, SUCCESS_URL, LOGIN_URL, DELETE_URL
+from .test_setup import ADD_URL, EDIT_URL, SUCCESS_URL, LOGIN_URL, DELETE_URL
 
 
 class TestLogic(TestSetUp):

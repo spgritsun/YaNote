@@ -1,8 +1,9 @@
 from http import HTTPStatus
 
 from .test_setup import TestSetUp
-from .common import (ADD_URL, EDIT_URL, SUCCESS_URL, LOGIN_URL, DELETE_URL,
-                     HOME_URL, SIGNUP_URL, LOGOUT_URL, LIST_URL, DETAIL_URL)
+from .test_setup import (ADD_URL, EDIT_URL, SUCCESS_URL, LOGIN_URL,
+                         DELETE_URL, HOME_URL, SIGNUP_URL, LOGOUT_URL,
+                         LIST_URL, DETAIL_URL)
 
 
 class TestRoutes(TestSetUp):

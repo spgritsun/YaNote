@@ -2,7 +2,7 @@ from notes.forms import NoteForm
 
 from .test_setup import TestSetUp
 
-from .common import LIST_URL, ADD_URL, EDIT_URL
+from .test_setup import LIST_URL, ADD_URL, EDIT_URL
 
 
 class TestContent(TestSetUp):
